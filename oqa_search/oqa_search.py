@@ -25,9 +25,10 @@ INCIDENT_GROUPS: Dict[str, int] = {
     "12-SP5": 282,
     "15-SP4-TERADATA": 521,
     "12-SP3-TERADATA": 191,
+    "PUBLIC-CLOUD": 430,
 }
 
-AGGREGATED_GROUPS: Dict[str, int] = {"core": 414, "containers": 417, "yast": 421, "security": 429}
+AGGREGATED_GROUPS: Dict[str, int] = {"core": 414, "containers": 417, "yast": 421, "security": 429, "public_cloud": 427,}
 
 OQA_QUERY_STRINGS: Dict[str, str] = {
     "failed": "&result=failed&result=incomplete&result=timeout_exceeded",
@@ -91,6 +92,8 @@ def _parser(args) -> argparse.Namespace:
         nargs="+",
         help="Job groups to look into inside the Aggregated Updates section",
     )
+    parser.add_argument("--public_cloud", action="store_true", help="Search also in the Maintenance Public cloud group")
+    
 
     return parser.parse_args(args)
 
@@ -321,11 +324,19 @@ def single_incidents(build: str, versions: List[str], url_openqa: str) -> None:
     :param versions: SLE versions
     :param url_openqa: openQA URL
     """
+    # parser = _parser()
+    # args = parser.parse_args()
+    args = _parser(argv[1:])
+    
     print_title("Single incidents - Core")
 
     for version in versions:
         # version check is already done in _get_group_id
         _print_openqa_job_results(url_openqa, version, build, _get_group_id(version))
+
+    if args.public_cloud:
+        print_title("Single incidents - Public cloud")
+        _print_openqa_job_results(url_openqa, version, build, INCIDENT_GROUPS["PUBLIC-CLOUD"])
 
 
 def aggregated_updates(
